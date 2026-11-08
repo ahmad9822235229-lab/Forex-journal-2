@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="Private offline Forex trading journal">
+<link rel="manifest" href="manifest.webmanifest">
+<title>My Forex Journal</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--panel:#121d2e;--panel2:#18263a;--line:#26364d;--txt:#edf3fb;--muted:#9aabc1;--green:#22c58b;--red:#ff6875;--blue:#4e8cff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:15px system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:22px 17px 15px;background:linear-gradient(135deg,#14253b,#0b1220)}h1{font-size:22px;margin:3px 0}.sub,.muted{color:var(--muted);font-size:12px}
+main{max-width:850px;margin:auto;padding:14px;display:grid;gap:13px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.card,.section{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px}.metric small{color:var(--muted)}.metric strong{display:block;font-size:21px;margin-top:5px;overflow-wrap:anywhere}
+h2{font-size:16px;margin:0 0 12px}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}input,select,textarea{width:100%;padding:11px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--txt);font:inherit;min-width:0}textarea{min-height:65px;resize:vertical}.full{grid-column:1/-1}
+button{border:0;border-radius:9px;padding:11px 13px;font-weight:650;background:var(--blue);color:white;font:inherit;cursor:pointer}.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--txt)}.danger{background:#49232c;color:#ffd8dc}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{font-size:13px}.positive{color:var(--green)}.negative{color:var(--red)}
+.trade{padding:12px 0;border-top:1px solid var(--line)}.trade:first-child{border-top:0}.tradehead{display:flex;justify-content:space-between;gap:8px;font-weight:650}.tradeinfo{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.6}.tradebuttons{display:flex;gap:7px;margin-top:8px}.tradebuttons button{padding:7px 10px;font-size:12px}
+.notice{font-size:12px;color:var(--muted);line-height:1.5}.pill{display:inline-block;padding:4px 8px;border-radius:20px;background:var(--panel2);font-size:11px;color:var(--muted)}
+@media(min-width:650px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<header><div class="sub">PRIVATE • OFFLINE-FIRST • USD</div><h1>My Forex Journal</h1><div class="sub">Your trades, your statistics, stored on this device.</div></header>
+<main>
+ <div class="grid">
+  <div class="card metric"><small>Net P&amp;L</small><strong id="net">$0.00</strong></div>
+  <div class="card metric"><small>Win rate</small><strong id="win">0%</strong></div>
+  <div class="card metric"><small>Total trades</small><strong id="count">0</strong></div>
+  <div class="card metric"><small>Average planned RR</small><strong id="avgRR">—</strong></div>
+ </div>
+ <section class="section">
+  <h2 id="formTitle">＋ Add a trade</h2>
+  <form id="tradeForm">
+   <div class="formgrid">
+    <div><label for="date">Date</label><input id="date" type="date" required></div>
+    <div><label for="pair">Pair / instrument</label><input id="pair" placeholder="EUR/USD, XAU/USD" required></div>
+    <div><label for="side">Direction</label><select id="side"><option>Buy</option><option>Sell</option></select></div>
+    <div><label for="risk">Risk (%)</label><input id="risk" type="number" min="0" step="0.01" placeholder="1.00"></div>
+    <div><label for="entry">Entry price</label><input id="entry" type="number" step="any" required></div>
+    <div><label for="sl">Stop loss</label><input id="sl" type="number" step="any" required></div>
+    <div><label for="tp">Take profit</label><input id="tp" type="number" step="any" required></div>
+    <div><label for="exit">Exit price</label><input id="exit" type="number" step="any" required></div>
+    <div><label for="pnl">Realized P&amp;L (USD)</label><input id="pnl" type="number" step="0.01" required placeholder="e.g. 45.50"></div>
+    <div><label for="setup">Setup / strategy</label><input id="setup" placeholder="Breakout, support..."></div>
+    <div class="full"><label for="notes">Notes / emotions / screenshot filename</label><textarea id="notes" placeholder="Why did you enter? Did you follow your plan?"></textarea></div>
+    <div class="full notice" id="rrPreview">Planned RR will appear after entering Entry, SL and TP.</div>
+    <div class="full actions"><button type="submit" id="saveBtn">Save trade</button><button type="button" class="secondary" id="cancelEdit" hidden>Cancel edit</button></div>
+   </div>
+  </form>
+ </section>
+ <section class="section">
+  <h2>Trade history</h2>
+  <div class="actions" style="margin-bottom:10px"><input id="search" placeholder="Filter by pair..." style="flex:1"><button class="secondary" id="export">Export CSV</button><button class="secondary" id="backup">Backup JSON</button></div>
+  <div id="history"><div class="notice">No trades yet. Add your first trade above.</div></div>
+ </section>
+ <section class="section">
+  <h2>Risk &amp; performance</h2>
+  <div class="grid">
+   <div class="metric"><small>Gross wins</small><strong id="grossWin">$0.00</strong></div>
+   <div class="metric"><small>Gross losses</small><strong id="grossLoss">$0.00</strong></div>
+   <div class="metric"><small>Profit factor</small><strong id="pf">—</strong></div>
+   <div class="metric"><small>Max drawdown*</small><strong id="dd">$0.00</strong></div>
+  </div>
+  <p class="notice">*Drawdown is calculated from the running cumulative P&amp;L starting at $0, in date order. P&amp;L is entered manually; ensure it reflects your broker's realized result including costs.</p>
+ </section>
+ <section class="section">
+  <h2>Data &amp; privacy</h2>
+  <p class="notice">Trades are stored in this browser's local storage on this device. They are not synced to a broker or cloud. Clearing browser/app data can erase them. Export a CSV or JSON backup regularly. This journal does not place trades or provide trading signals.</p>
+  <div class="actions"><button class="secondary" id="importBtn">Restore JSON backup</button><input type="file" id="importFile" accept="application/json" hidden><button class="danger" id="deleteAll">Delete all trades</button></div>
+ </section>
+ <footer class="notice" style="text-align:center;padding:4px 0 20px">My Forex Journal • Personal use</footer>
+</main>
+<script>
+(()=> {
+ const KEY='myForexJournalTrades_v1'; let trades=[], editing=null;
+ const $=id=>document.getElementById(id);
+ const fields=['date','pair','side','risk','entry','sl','tp','exit','pnl','setup','notes'];
+ const money=n=>(n<0?'-$':'$')+Math.abs(n).toFixed(2);
+ const val=id=>$(id).value;
+ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function read(){try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');trades=Array.isArray(x)?x:[]}catch{trades=[]}}
+ function save(){try{localStorage.setItem(KEY,JSON.stringify(trades));return true}catch{alert('Could not save. Export a backup and free device storage.');return false}}
+ function rr(t){const risk=t.side==='Buy'?t.entry-t.sl:t.sl-t.entry;const reward=t.side==='Buy'?t.tp-t.entry:t.entry-t.tp;return risk>0&&reward>0?reward/risk:null}
+ function preview(){const t={side:val('side'),entry:+val('entry'),sl:+val('sl'),tp:+val('tp')};const r=rr(t);$('rrPreview').textContent=r===null?'Enter valid levels: SL must be on the loss side and TP on the profit side.':'Planned Risk : Reward = '+r.toFixed(2)+'R';}
+ function render(){
+  const sorted=[...trades].sort((a,b)=>a.date.localeCompare(b.date)||a.created-b.created);
+  const net=sorted.reduce((s,t)=>s+t.pnl,0), wins=sorted.filter(t=>t.pnl>0).length, decided=sorted.filter(t=>t.pnl!==0).length;
+  const gw=sorted.filter(t=>t.pnl>0).reduce((s,t)=>s+t.pnl,0), gl=Math.abs(sorted.filter(t=>t.pnl<0).reduce((s,t)=>s+t.pnl,0));
+  const rrs=sorted.map(rr).filter(x=>x!==null);let equity=0,peak=0,maxDD=0;
+  sorted.forEach(t=>{equity+=t.pnl;peak=Math.max(peak,equity);maxDD=Math.max(maxDD,peak-equity)});
+  $('net').textContent=money(net);$('net').className=net>=0?'positive':'negative';$('win').textContent=(decided?wins/decided*100:0).toFixed(1)+'%';
+  $('count').textContent=trades.length;$('avgRR').textContent=rrs.length?(rrs.reduce((a,b)=>a+b,0)/rrs.length).toFixed(2)+'R':'—';
+  $('grossWin').textContent=money(gw);$('grossLoss').textContent=money(-gl);$('pf').textContent=gl? (gw/gl).toFixed(2):(gw?'∞':'—');$('dd').textContent=money(maxDD);
+  const q=$('search').value.trim().toLowerCase(), list=[...trades].filter(t=>t.pair.toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date)||b.created-a.created);
+  $('history').innerHTML=list.length?list.map(t=>`<article class="trade"><div class="tradehead"><span>${esc(t.pair)} · ${esc(t.side)} <span class="pill">${esc(t.date)}</span></span><span class="${t.pnl>=0?'positive':'negative'}">${money(t.pnl)}</span></div><div class="tradeinfo">Entry ${t.entry} · SL ${t.sl} · TP ${t.tp} · Exit ${t.exit}<br>Risk ${t.risk||0}% · RR ${rr(t)===null?'—':rr(t).toFixed(2)+'R'}${t.setup?' · '+esc(t.setup):''}${t.notes?'<br>'+esc(t.notes):''}</div><div class="tradebuttons"><button class="secondary" data-edit="${t.id}">Edit</button><button class="danger" data-del="${t.id}">Delete</button></div></article>`).join(''):'<div class="notice">No matching trades.</div>';
+ }
+ function reset(){editing=null;$('tradeForm').reset();$('date').value=new Date().toISOString().slice(0,10);$('formTitle').textContent='＋ Add a trade';$('saveBtn').textContent='Save trade';$('cancelEdit').hidden=true;preview()}
+ $('tradeForm').addEventListener('submit',e=>{
+  e.preventDefault();const t={};fields.forEach(k=>t[k]=val(k));['risk','entry','sl','tp','exit','pnl'].forEach(k=>t[k]=Number(t[k])||0);t.pair=t.pair.trim().toUpperCase();
+  if(!t.pair||!t.date||rr(t)===null){alert('Please check the pair, date, Entry, SL and TP.');return}
+  if(editing){const i=trades.findIndex(x=>x.id===editing);if(i>=0)trades[i]={...trades[i],...t}}
+  else trades.push({...t,id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),created:Date.now()});
+  if(save()){reset();render()}
+ });
+ $('cancelEdit').onclick=reset;
+ $('history').addEventListener('click',e=>{
+  const id=e.target.dataset.edit||e.target.dataset.del;if(!id)return;
+  if(e.target.dataset.del){if(confirm('Delete this trade?')){trades=trades.filter(t=>t.id!==id);save();render()}}
+  else{const t=trades.find(t=>t.id===id);if(!t)return;editing=id;fields.forEach(k=>$(k).value=t[k]??'');$('formTitle').textContent='Edit trade';$('saveBtn').textContent='Update trade';$('cancelEdit').hidden=false;preview();window.scrollTo({top:0,behavior:'smooth'})}
+ });
+ $('search').addEventListener('input',render);['entry','sl','tp','side'].forEach(id=>$(id).addEventListener('input',preview));
+ function download(name,content,type){const a=document.createElement('a'),u=URL.createObjectURL(new Blob([content],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000)}
+ $('export').onclick=()=>{const cols=['date','pair','side','entry','sl','tp','exit','risk','pnl','setup','notes'];const csv=[cols.join(','),...trades.map(t=>cols.map(k=>'"'+String(t[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');download('forex-journal.csv',csv,'text/csv')};
+ $('backup').onclick=()=>download('forex-journal-backup.json',JSON.stringify(trades,null,2),'application/json');
+ $('importBtn').onclick=()=>$('importFile').click();
+ $('importFile').onchange=async e=>{try{const f=e.target.files[0];if(!f)return;const data=JSON.parse(await f.text());if(!Array.isArray(data)||!data.every(t=>t&&t.pair&&t.date&&Number.isFinite(Number(t.pnl))))throw Error();if(confirm('Restore backup? This replaces the current journal.')){trades=data;save();render()}}catch{alert('Invalid journal backup file.')}e.target.value=''};
+ $('deleteAll').onclick=()=>{if(confirm('Permanently delete all saved trades on this browser?')){trades=[];save();reset();render()}};
+ read();reset();render();
+ if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
+})();
+</script>
+</body></html>
