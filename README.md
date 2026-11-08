@@ -1,1 +1,0 @@
-# Forex-journal-2
